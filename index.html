@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Access Gate | Secure Link Unlocker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #10b981;
+            --bg-dark: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Top Bar */
+        .top-nav {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .admin-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* User Unlock Card */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 32px;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .icon-badge {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.2));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+
+        p.desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5);
+            background: linear-gradient(135deg, #6d70f7, #5951f2);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+        }
+
+        .btn-action:disabled {
+            background: #334155;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            color: #64748b;
+        }
+
+        .status-badge {
+            margin-top: 16px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 15, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-box {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            padding: 32px 28px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 13px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-modal:hover { background: var(--primary-hover); }
+
+        /* Output Box */
+        .result-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+
+        .copy-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .copy-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #090d16;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            color: #34d399;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .copy-group button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-group button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <button class="admin-btn" onclick="openModal('loginModal')">
+            <span>⚙️</span> Admin
+        </button>
+    </div>
+
+    <!-- MAIN ACCESS CARD -->
+    <div class="card">
+        <div class="icon-badge">🔒</div>
+        <h2>Restricted File</h2>
+        <p class="desc">Please complete the short sponsor verification to access and download your destination file.</p>
+        
+        <button id="adBtn" class="btn-action" onclick="handleUnlock()">
+            <span>🎬</span> Watch Video to Unlock
+        </button>
+        
+        <div id="statusBadge" class="status-badge"></div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="loginModal" class="modal">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('loginModal')">✕</button>
+            <div class="modal-title">🔐 Admin Authentication</div>
+            <div class="field">
+                <label>Username</label>
+                <input type="text" id="adminUser" placeholder="Enter username" autocomplete="off">
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="adminPass" placeholder="Enter password">
+            </div>
+            <button class="btn-modal" onclick="authenticateAdmin()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div id="adminModal" class="modal">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('adminModal')">✕</button>
+            <div class="modal-title">⚡ Link Protection Tool</div>
+            <div class="field">
+                <label>Target Resource URL</label>
+                <input type="url" id="targetUrlInput" placeholder="https://t.me/your_channel/file">
+            </div>
+            <button class="btn-modal" onclick="generateSecureLink()">Create Locked Link</button>
+
+            <div id="resultContainer" class="result-container">
+                <label style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Protected Link Ready</label>
+                <div class="copy-group">
+                    <input type="text" id="generatedLinkOutput" readonly>
+                    <button onclick="copyGeneratedLink()">Copy</button>
+                </div>
+                <p id="copyFeedback" style="color: #34d399; font-size: 12px; margin-top: 8px; display: none;">✓ Copied to clipboard!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BLOCK_ID = "46253";
+
+        // Query Target Extraction
+        const query = new URLSearchParams(window.location.search);
+        let destinationUrl = "";
+        
+        if (query.get("url")) {
+            try {
+                destinationUrl = atob(decodeURIComponent(query.get("url")));
+            } catch(e) {
+                destinationUrl = "";
+            }
+        }
+
+        // Adsgram Initialization
+        let AdController = null;
+        if (window.Adsgram) {
+            AdController = window.Adsgram.init({ blockId: BLOCK_ID });
+        }
+
+        function handleUnlock() {
+            const badge = document.getElementById("statusBadge");
+            const btn = document.getElementById("adBtn");
+
+            if (!destinationUrl) {
+                showStatus("Invalid or missing destination URL.", true);
+                return;
+            }
+
+            if (!AdController) {
+                showStatus("Ad network unavailable. Redirecting...", false);
+                setTimeout(() => { proceedToDestination(); }, 1200);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span>⏳</span> Loading Sponsor...`;
+
+            AdController.show().then(() => {
+                showStatus("Verification successful! Unlocking...", false);
+                setTimeout(() => {
+                    proceedToDestination();
+                }, 800);
+            }).catch(() => {
+                showStatus("Verification incomplete. Please retry.", true);
+                btn.disabled = false;
+                btn.innerHTML = `<span>🎬</span> Watch Video to Unlock`;
+            });
+        }
+
+        function proceedToDestination() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+                window.Telegram.WebApp.openLink(destinationUrl);
+            } else {
+                window.location.href = destinationUrl;
+            }
+        }
+
+        function showStatus(text, isError) {
+            const badge = document.getElementById("statusBadge");
+            badge.innerText = text;
+            badge.className = `status-badge ${isError ? 'status-error' : 'status-success'}`;
+            badge.style.display = "block";
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = "flex"; }
+        function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+        function authenticateAdmin() {
+            const u = document.getElementById("adminUser").value.trim();
+            const p = document.getElementById("adminPass").value.trim();
+
+            if (u === "chiku_.3919" && p === "Chintan@2009") {
+                closeModal("loginModal");
+                openModal("adminModal");
+                document.getElementById("adminUser").value = "";
+                document.getElementById("adminPass").value = "";
+            } else {
+                alert("Invalid username or password.");
+            }
+        }
+
+        function generateSecureLink() {
+            const input = document.getElementById("targetUrlInput").value.trim();
+            if (!input) {
+                alert("Please enter a valid target URL.");
+                return;
+            }
+
+            const encoded = encodeURIComponent(btoa(input));
+            const secureUrl = `${window.location.origin}${window.location.pathname}?url=${encoded}`;
+            
+            document.getElementById("generatedLinkOutput").value = secureUrl;
+            document.getElementById("resultContainer").style.display = "block";
+            copyGeneratedLink();
+        }
+
+        function copyGeneratedLink() {
+            const output = document.getElementById("generatedLinkOutput");
+            output.select();
+            output.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(output.value);
+
+            const feedback = document.getElementById("copyFeedback");
+            feedback.style.display = "block";
+            setTimeout(() => { feedback.style.display = "none"; }, 2000);
+        }
+    </script>
+</body>
+</html>
