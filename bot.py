@@ -1,5 +1,6 @@
 import os
 import asyncio
+from aiohttp import web
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
@@ -12,6 +13,20 @@ WEB_APP_URL = "https://drecopenal-gif.github.io/Adsgrm-/"
 USER_SESSIONS = {}
 
 app = Client("ad_file_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+# Dummy Web Server to keep Render Happy
+async def handle_ping(request):
+    return web.Response(text="Bot is running fine!")
+
+async def start_web_server():
+    server = web.Application()
+    server.router.add_get("/", handle_ping)
+    runner = web.AppRunner(server)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server started on port {port}")
 
 @app.on_message(filters.private & (filters.document | filters.video | filters.photo | filters.audio))
 async def save_file(client, message):
@@ -57,11 +72,11 @@ async def handle_webapp_data(client, message):
             await message.reply_text("⚠️ કોઈ ફાઇલ મળી નથી. લિંક ફરીથી ઓપન કરો.")
 
 async def main():
-    async with app:
-        print("Bot is running...")
-        await asyncio.Event().wait()
+    await start_web_server()
+    await app.start()
+    print("Bot is fully running!")
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
