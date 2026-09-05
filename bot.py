@@ -1,4 +1,5 @@
 import os
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
@@ -55,5 +56,12 @@ async def handle_webapp_data(client, message):
         else:
             await message.reply_text("⚠️ કોઈ ફાઇલ મળી નથી. લિંક ફરીથી ઓપન કરો.")
 
+async def main():
+    async with app:
+        print("Bot is running...")
+        await asyncio.Event().wait()
+
 if __name__ == "__main__":
-    app.run()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
